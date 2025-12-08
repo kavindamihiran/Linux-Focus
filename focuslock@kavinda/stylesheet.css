@@ -1,0 +1,13 @@
+/* Focus Lock Extension - Stylesheet */
+
+.focus-lock-indicator {
+    padding: 0 8px;
+}
+
+.focus-lock-indicator.unlocked {
+    color: #aaaaaa;
+}
+
+.focus-lock-indicator.locked {
+    color: #ff6b6b;
+}

@@ -1,0 +1,8 @@
+{
+    "uuid": "focuslock@kavinda",
+    "name": "Focus Lock",
+    "description": "Lock focus to a specific application window. When enabled, you cannot switch to other windows until you unlock.",
+    "shell-version": ["45", "46", "47", "48", "49"],
+    "version": 1,
+    "url": ""
+}
