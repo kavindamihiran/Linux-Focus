@@ -8,6 +8,8 @@ import GObject from 'gi://GObject';
 import Gio from 'gi://Gio';
 import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
+import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -25,11 +27,13 @@ class FocusLockIndicator extends PanelMenu.Button {
         this._lockedWindow = null;
         this._focusHandlerId = null;
         this._windowCreatedId = null;
+        this._focusTimeoutId = null;
+        this._minimizeTimeoutId = null;
 
         // Create the label for the panel
         this._label = new St.Label({
             text: UNLOCKED_ICON,
-            y_align: imports.gi.Clutter.ActorAlign.CENTER,
+            y_align: Clutter.ActorAlign.CENTER,
             style_class: 'focus-lock-indicator unlocked'
         });
         this.add_child(this._label);
@@ -37,7 +41,7 @@ class FocusLockIndicator extends PanelMenu.Button {
         // Connect click handler
         this.connect('button-press-event', () => {
             this._toggleLock();
-            return imports.gi.Clutter.EVENT_STOP;
+            return Clutter.EVENT_STOP;
         });
     }
 
@@ -93,6 +97,17 @@ class FocusLockIndicator extends PanelMenu.Button {
             global.display.disconnect(this._windowCreatedId);
             this._windowCreatedId = null;
         }
+        
+        // Clear timeouts
+        if (this._focusTimeoutId) {
+            GLib.source_remove(this._focusTimeoutId);
+            this._focusTimeoutId = null;
+        }
+        
+        if (this._minimizeTimeoutId) {
+            GLib.source_remove(this._minimizeTimeoutId);
+            this._minimizeTimeoutId = null;
+        }
 
         this._lockedWindow = null;
         this._isLocked = false;
@@ -122,12 +137,17 @@ class FocusLockIndicator extends PanelMenu.Button {
                 }
                 
                 // Use a small timeout to avoid focus race conditions
-                imports.gi.GLib.timeout_add(imports.gi.GLib.PRIORITY_DEFAULT, 50, () => {
+                if (this._focusTimeoutId) {
+                    GLib.source_remove(this._focusTimeoutId);
+                }
+                
+                this._focusTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, () => {
+                    this._focusTimeoutId = null;
                     if (this._isLocked && this._lockedWindow) {
                         const timestamp = global.get_current_time();
                         this._lockedWindow.activate(timestamp);
                     }
-                    return imports.gi.GLib.SOURCE_REMOVE;
+                    return GLib.SOURCE_REMOVE;
                 });
             } else {
                 // Window was closed, unlock
@@ -143,7 +163,12 @@ class FocusLockIndicator extends PanelMenu.Button {
         }
 
         // Wait a bit for the window to be ready, then minimize it
-        imports.gi.GLib.timeout_add(imports.gi.GLib.PRIORITY_DEFAULT, 100, () => {
+        if (this._minimizeTimeoutId) {
+            GLib.source_remove(this._minimizeTimeoutId);
+        }
+
+        this._minimizeTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
+            this._minimizeTimeoutId = null;
             if (this._isLocked && window && window !== this._lockedWindow) {
                 if (window.can_minimize()) {
                     window.minimize();
@@ -154,7 +179,7 @@ class FocusLockIndicator extends PanelMenu.Button {
                     this._lockedWindow.activate(timestamp);
                 }
             }
-            return imports.gi.GLib.SOURCE_REMOVE;
+            return GLib.SOURCE_REMOVE;
         });
     }
 
@@ -166,6 +191,14 @@ class FocusLockIndicator extends PanelMenu.Button {
         if (this._windowCreatedId) {
             global.display.disconnect(this._windowCreatedId);
             this._windowCreatedId = null;
+        }
+        if (this._focusTimeoutId) {
+            GLib.source_remove(this._focusTimeoutId);
+            this._focusTimeoutId = null;
+        }
+        if (this._minimizeTimeoutId) {
+            GLib.source_remove(this._minimizeTimeoutId);
+            this._minimizeTimeoutId = null;
         }
         super.destroy();
     }

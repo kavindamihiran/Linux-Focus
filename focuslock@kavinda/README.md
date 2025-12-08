@@ -20,6 +20,11 @@ Focus Lock is a GNOME Shell extension that locks focus to a specific application
 
 - GNOME Shell versions: 45, 46, 47, 48, 49
 
+## About the Author
+
+**Created by [Kavinda Mihiran](https://github.com/kavindamihiran)**
+
 ## License
 
-[Specify your license here, e.g., GPL-3.0]
+This project is licensed under the **GNU General Public License v3.0**.
+See the [LICENSE](LICENSE) file for more details.
