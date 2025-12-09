@@ -14,8 +14,8 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const UNLOCKED_ICON = '🔓';
-const LOCKED_ICON = '🔒';
+const UNLOCKED_ICON = '◎';  // Open circle - green
+const LOCKED_ICON = '◉';    // Filled circle - red
 
 const FocusLockIndicator = GObject.registerClass(
 class FocusLockIndicator extends PanelMenu.Button {

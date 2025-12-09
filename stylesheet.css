@@ -5,9 +5,9 @@
 }
 
 .focus-lock-indicator.unlocked {
-    color: #aaaaaa;
+    color: #4ade80; /* Bright green - visually distinct "free" state */
 }
 
 .focus-lock-indicator.locked {
-    color: #ff6b6b;
+    color: #f87171; /* Bright red - visually distinct "locked" state */
 }
