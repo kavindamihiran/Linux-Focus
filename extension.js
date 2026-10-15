@@ -15,6 +15,7 @@ import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 const UNLOCKED_ICON = '◎';  // Open circle - green
 const LOCKED_ICON = '◉';    // Filled circle - red
+const BLOCKED_NOTIFY_COOLDOWN_MS = 5000;
 
 export default class FocusLockExtension extends Extension {
     constructor(metadata) {
@@ -24,6 +25,8 @@ export default class FocusLockExtension extends Extension {
         this._buttonClickHandlerId = null;
         this._isLocked = false;
         this._lockedWindow = null;
+        this._lockedAppName = null;
+        this._lastBlockedNotifyTime = 0;
         this._focusHandlerId = null;
         this._windowCreatedId = null;
         this._focusTimeoutId = null;
@@ -120,7 +123,8 @@ export default class FocusLockExtension extends Extension {
         // Get app name for notification
         const app = Shell.WindowTracker.get_default().get_window_app(focusedWindow);
         const appName = app ? app.get_name() : 'Window';
-        Main.notify('Focus Lock', `Locked to: ${appName}`);
+        this._lockedAppName = appName;
+        Main.notify('Focus Lock ON', `Locked to: ${appName}`);
     }
 
     _unlock() {
@@ -155,6 +159,8 @@ export default class FocusLockExtension extends Extension {
 
         const wasLocked = this._isLocked;
         this._lockedWindow = null;
+        this._lockedAppName = null;
+        this._lastBlockedNotifyTime = 0;
         this._isLocked = false;
 
         // Update UI
@@ -166,8 +172,20 @@ export default class FocusLockExtension extends Extension {
         }
 
         if (wasLocked) {
-            Main.notify('Focus Lock', 'Unlocked - you can now switch windows');
+            Main.notify('Focus Lock OFF', 'Unlocked - you can now switch windows');
         }
+    }
+
+    _notifyBlocked() {
+        // Throttle so repeated switch attempts don't flood the notification list
+        const now = GLib.get_monotonic_time() / 1000;
+        if (now - this._lastBlockedNotifyTime < BLOCKED_NOTIFY_COOLDOWN_MS) {
+            return;
+        }
+        this._lastBlockedNotifyTime = now;
+
+        Main.notify('Focus Lock is ON',
+            `Locked to ${this._lockedAppName}. Click ${LOCKED_ICON} in the top bar to unlock.`);
     }
 
     _refocusLockedWindow() {
@@ -215,6 +233,7 @@ export default class FocusLockExtension extends Extension {
                 currentFocus.minimize();
             }
 
+            this._notifyBlocked();
             this._refocusLockedWindow();
         }
     }
@@ -237,6 +256,7 @@ export default class FocusLockExtension extends Extension {
                 if (window.can_minimize()) {
                     window.minimize();
                 }
+                this._notifyBlocked();
                 this._refocusLockedWindow();
             }
             return GLib.SOURCE_REMOVE;
