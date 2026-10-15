@@ -15,10 +15,13 @@ Focus Lock is a GNOME Shell extension that locks focus to a specific application
 
 - Enable the extension to lock focus to the current window.
 - To unlock, disable the extension or use the provided unlock mechanism.
+- A notification is shown when the lock is turned on or off.
+- If you try to switch to another window while the lock is on, a notification reminds you that Focus Lock is active (at most once every 5 seconds).
 
 ## Compatibility
 
-- GNOME Shell version: 50
+- GNOME Shell versions: 45, 46, 47, 48, 49, 50
+- e.g. Ubuntu 24.04+ and Fedora 39+
 
 ## About the Author
 
